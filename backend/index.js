@@ -11,6 +11,38 @@ app.use(express.json());
 
 const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
 
+app.get("/getnftdata", async (req, res) => {
+    try {
+        const { query } = req;
+
+        if (typeof query.contractAddress === "string") {
+            const response = await Moralis.EvmApi.nft.getNFTTrades({
+                address: query.contractAddress,
+                chain: "0x1",
+            });
+
+            return res.status(200).json(response);
+        } else {
+            const nftData = [];
+
+            for (let i = 0; i < query.contractAddress.length; i++) {
+                const response = await Moralis.EvmApi.nft.getNFTTrades({
+                    address: query.contractAddress[i],
+                    chain: "0x1",
+                });
+
+                nftData.push(response);
+            }
+
+            const response = { nftData };
+            return res.status(200).json(response);
+        }
+    } catch (e) {
+        console.log(`Somthing went wrong ${e}`);
+        return res.status(400).json();
+    }
+});
+
 Moralis.start({
     apiKey: MORALIS_API_KEY,
 }).then(() => {
